@@ -14,7 +14,7 @@ dependencies = [
     "datatrove[inference]",
     "jinja2>=3.1.6",
     "transformers>=4.57.3",
+    "vllm-tpu>=0.12.0",
 ]
 
 [tool.uv.sources]
-datatrove = { path = "../datatrove", editable = true }

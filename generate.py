@@ -1,13 +1,3 @@
-"""
-Dataset generation script using datatrove with an external LLM endpoint.
-
-Reads from allenai/Dolci-Think-SFT-7B dataset, processes single-turn conversations
-(len(messages) < 2), and generates responses via localhost:8000 endpoint.
-
-Server uses custom gemma_think.jinja chat template for reasoning format.
-Filters prompts to fit within 2048 token context.
-"""
-
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
@@ -26,7 +16,7 @@ from datatrove.pipeline.writers import JsonlWriter
 DATASET_NAME = "allenai/Dolci-Think-SFT-7B"
 MODEL_NAME = "google/gemma-3-4b-it"
 ENDPOINT_URL = "http://localhost:8000"
-OUTPUT_DIR = Path(__file__).parent / "output"
+OUTPUT_DIR = Path(__file__).parent / "output" / "allenai-dolci-sft-7b-4096-2048"
 LOGS_DIR = Path(__file__).parent / "logs"
 CHAT_TEMPLATE_PATH = Path(__file__).parent / "gemma_think.jinja"
 MAX_PROMPT_TOKENS = 2048
@@ -159,7 +149,6 @@ def main():
     # Writer with custom adapter to output only prompt, answer, finish_reason
     writer = JsonlWriter(
         output_folder=str(OUTPUT_DIR),
-        output_filename=output_filename,
         adapter=output_adapter,
     )
 
