@@ -30,27 +30,16 @@ MAX_GEN_TOKENS = 2048
 def dataset_adapter(self, data: dict, path: str, id_in_file: int | str) -> dict:
     """
     Adapter to extract user messages from the dataset.
-
     Takes the first user message as the prompt for generation.
-    Only includes single-turn conversations (len(messages) < 2).
     """
     messages = data.get("messages", [])
 
-    if not messages:
-        return {"text": ""}  # Empty text will be skipped by reader
-
-    # Pre-filter: only keep single-turn conversations (1 user + 1 assistant)
-    if len(messages) != 2:
-        return {"text": ""}
-
-    # Find the first user message as prompt
-    first_message = messages[0]
-    if first_message.get("role") != "user":
-        return {"text": ""}
-
-    prompt = first_message.get("content", "")
-    if not prompt:
-        return {"text": ""}
+    # Get first user message as prompt (or empty if invalid)
+    prompt = ""
+    if messages and len(messages) >= 1:
+        first_message = messages[0]
+        if first_message.get("role") == "user":
+            prompt = first_message.get("content", "")
 
     # Include dataset_source and original id from the original data
     # Try 'dataset_source' first, fallback to 'source'
@@ -63,8 +52,21 @@ def dataset_adapter(self, data: dict, path: str, id_in_file: int | str) -> dict:
         "metadata": {
             "dataset_source": dataset_source,
             "original_id": original_id,
+            "num_messages": len(messages),
         },
     }
+
+
+class SingleTurnFilter(BaseFilter):
+    """Filter to keep only single-turn conversations (1 user + 1 assistant)."""
+
+    name = "Single Turn"
+
+    def filter(self, doc: Document) -> bool | tuple[bool, str]:
+        num_messages = doc.metadata.get("num_messages", 0)
+        if num_messages != 2:
+            return False, f"multi_turn_{num_messages}_messages"
+        return True
 
 
 class PromptLengthFilter(BaseFilter):
@@ -235,6 +237,9 @@ def main():
         doc_progress=True,
     )
 
+    # Filter for single-turn conversations
+    single_turn_filter = SingleTurnFilter()
+
     # Filter for prompt length
     prompt_filter = PromptLengthFilter(
         tokenizer=tokenizer,
@@ -274,6 +279,7 @@ def main():
     # Build pipeline
     pipeline = [
         reader,
+        single_turn_filter,
         prompt_filter,
     ]
 
