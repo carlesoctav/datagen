@@ -7,6 +7,7 @@ from transformers import AutoTokenizer
 from datatrove.data import Document
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.pipeline.filters.base_filter import BaseFilter
+from datatrove.pipeline.filters.language_filter import LanguageFilter
 from datatrove.pipeline.readers import HuggingFaceDatasetReader
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 from datatrove.pipeline.inference.types import InferenceResult
@@ -165,6 +166,15 @@ def main():
     parser.add_argument(
         "--append", action="store_true", help="Append to existing output (for resuming)"
     )
+    parser.add_argument(
+        "--lang-filter", action="store_true", help="Filter for English only prompts"
+    )
+    parser.add_argument(
+        "--lang-threshold",
+        type=float,
+        default=0.65,
+        help="Language detection threshold (default: 0.65)",
+    )
     args = parser.parse_args()
 
     output_dir = args.output_dir
@@ -224,6 +234,15 @@ def main():
         max_tokens=MAX_PROMPT_TOKENS,
     )
 
+    # Optional: Filter for English only
+    lang_filter = None
+    if args.lang_filter:
+        lang_filter = LanguageFilter(
+            languages=["en"],
+            language_threshold=args.lang_threshold,
+        )
+        print(f"Language filter: English only (threshold: {args.lang_threshold})")
+
     # Inference configuration - use chat endpoint
     config = InferenceConfig(
         server_type="endpoint",
@@ -249,12 +268,20 @@ def main():
     pipeline = [
         reader,
         prompt_filter,
+    ]
+
+    # Add language filter if enabled
+    if lang_filter:
+        pipeline.append(lang_filter)
+
+    # Add inference runner
+    pipeline.append(
         InferenceRunner(
             rollout_fn=generation_rollout,
             config=config,
             output_writer=writer,
-        ),
-    ]
+        )
+    )
 
     # Execute
     executor = LocalPipelineExecutor(

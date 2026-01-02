@@ -15,6 +15,9 @@ dependencies = [
     "jinja2>=3.1.6",
     "transformers>=4.57.3",
     "vllm-tpu>=0.12.0",
+    "fasteners>=0.20",
+    "fasttext>=0.9.3",
+    "fasttext-numpy2-wheel>=0.9.2",
 ]
 
 [tool.uv.sources]
