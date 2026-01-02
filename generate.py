@@ -52,13 +52,18 @@ def dataset_adapter(self, data: dict, path: str, id_in_file: int | str) -> dict:
     if not prompt:
         return {"text": ""}
 
-    # Include dataset_source from the original data
-    dataset_source = data.get("dataset_source", "")
+    # Include dataset_source and original id from the original data
+    # Try 'dataset_source' first, fallback to 'source'
+    dataset_source = data.get("dataset_source", "") or data.get("source", "")
+    original_id = data.get("id", "")
 
     return {
         "text": prompt,
         "id": str(id_in_file),
-        "metadata": {"dataset_source": dataset_source},
+        "metadata": {
+            "dataset_source": dataset_source,
+            "original_id": original_id,
+        },
     }
 
 
@@ -104,6 +109,7 @@ async def generation_rollout(
         "generated": result.text,
         "stop_reason": result.finish_reason,
         "dataset_source": document.metadata.get("dataset_source", ""),
+        "original_id": document.metadata.get("original_id", ""),
         "doc_id": document.id,
     }
 
@@ -113,6 +119,7 @@ def output_adapter(self, doc) -> dict:
     rollout = doc.metadata.get("rollout_results", [{}])[0]
     return {
         "doc_id": doc.id,
+        "original_id": rollout.get("original_id", ""),
         "prompt": rollout.get("prompt", ""),
         "generated": rollout.get("generated", ""),
         "stop_reason": rollout.get("stop_reason", ""),
