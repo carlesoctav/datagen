@@ -15,12 +15,8 @@ from datatrove.pipeline.writers import JsonlWriter
 
 
 # Default Configuration
-DEFAULT_DATASET = "allenai/Dolci-Think-SFT-7B"
 DEFAULT_MODEL = "google/gemma-3-27b-it"
 DEFAULT_ENDPOINT = "http://localhost:8000"
-DEFAULT_OUTPUT_DIR = (
-    Path(__file__).parent / "output" / "allenai-dolci-sft-7b-gemma3-27b"
-)
 DEFAULT_LOGS_DIR = Path(__file__).parent / "logs"
 CHAT_TEMPLATE_PATH = Path(__file__).parent / "gemma_think.jinja"
 MAX_PROMPT_TOKENS = 2048
@@ -136,14 +132,14 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=DEFAULT_OUTPUT_DIR,
-        help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})",
+        required=True,
+        help="Output directory for generated data",
     )
     parser.add_argument(
         "--dataset",
         type=str,
-        default=DEFAULT_DATASET,
-        help=f"HuggingFace dataset name (default: {DEFAULT_DATASET})",
+        required=True,
+        help="HuggingFace dataset name",
     )
     parser.add_argument(
         "--model",
@@ -230,11 +226,12 @@ def main():
     reader = HuggingFaceDatasetReader(
         dataset=dataset_name,
         dataset_options={"split": "train"},
-        streaming=True,
+        streaming=False,
         skip=args.skip,
         limit=args.limit,
         adapter=dataset_adapter,
         doc_progress=True,
+        shuffle_files=True,
     )
 
     # Filter for single-turn conversations
