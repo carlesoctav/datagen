@@ -180,6 +180,11 @@ def main():
         default=0.65,
         help="Language detection threshold (default: 0.65)",
     )
+    parser.add_argument(
+        "--shuffle",
+        action="store_true",
+        help="Shuffle dataset files (disables deterministic resuming with --skip)",
+    )
     args = parser.parse_args()
 
     output_dir = args.output_dir
@@ -231,7 +236,7 @@ def main():
         limit=args.limit,
         adapter=dataset_adapter,
         doc_progress=True,
-        shuffle_files=True,
+        shuffle_files=args.shuffle,
     )
 
     # Filter for single-turn conversations
@@ -309,6 +314,8 @@ def main():
         print(f"Skipping first {args.skip} documents (resuming)")
     if args.limit > 0:
         print(f"Limiting to {args.limit} documents")
+    if args.shuffle:
+        print("WARNING: Shuffle enabled - --skip will not resume deterministically")
     print("-" * 50)
 
     executor.run()
