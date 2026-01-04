@@ -1,5 +1,7 @@
 {{ bos_token }}
-{%- set first_user_prefix = 'Think through your approach in <reasoning> tags, then provide your complete response in <answer> tags. For creative tasks, briefly plan in reasoning, then write the full creative output in answer.\n\n' -%}
+{%- set first_user_prefix = 'Think through your approach in <reasoning></reasoning> tags, then provide your complete response in <answer></answer> tags.
+
+' -%}
 {%- set loop_messages = messages -%}
 {%- for message in loop_messages -%}
     {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}
