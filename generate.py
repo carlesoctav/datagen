@@ -171,6 +171,7 @@ def main():
     )
     parser.add_argument(
         "--shuffle",
+        default=False,
         action="store_true",
         help="Shuffle dataset files (disables deterministic resuming with --skip)",
     )
@@ -225,7 +226,7 @@ def main():
         limit=args.limit,
         adapter=dataset_adapter,
         doc_progress=True,
-        shuffle_files=args.shuffle,
+        shuffle_files=False,
     )
 
     # Filter for single-turn conversations
