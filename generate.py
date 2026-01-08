@@ -19,8 +19,8 @@ DEFAULT_MODEL = "google/gemma-3-27b-it"
 DEFAULT_ENDPOINT = "http://localhost:8000"
 DEFAULT_LOGS_DIR = Path(__file__).parent / "logs"
 CHAT_TEMPLATE_PATH = Path(__file__).parent / "gemma_think.jinja"
-MAX_PROMPT_TOKENS = 2048
-MAX_GEN_TOKENS = 2048
+MAX_PROMPT_TOKENS = 1024
+MAX_GEN_TOKENS = 1024
 
 
 def dataset_adapter(self, data: dict, path: str, id_in_file: int | str) -> dict:
@@ -28,27 +28,16 @@ def dataset_adapter(self, data: dict, path: str, id_in_file: int | str) -> dict:
     Adapter to extract user messages from the dataset.
     Takes the first user message as the prompt for generation.
     """
-    messages = data.get("messages", [])
 
-    # Get first user message as prompt (or empty if invalid)
-    prompt = ""
-    if messages and len(messages) >= 1:
-        first_message = messages[0]
-        if first_message.get("role") == "user":
-            prompt = first_message.get("content", "")
-
-    # Include dataset_source and original id from the original data
-    # Try 'dataset_source' first, fallback to 'source'
     dataset_source = data.get("dataset_source", "") or data.get("source", "")
-    original_id = data.get("id", "")
+    original_id = data.get("original_id", "")
 
     return {
-        "text": prompt,
+        "text": data["prompt"],
         "id": str(id_in_file),
         "metadata": {
             "dataset_source": dataset_source,
             "original_id": original_id,
-            "num_messages": len(messages),
         },
     }
 
@@ -281,7 +270,6 @@ def main():
     # Build pipeline
     pipeline = [
         reader,
-        single_turn_filter,
         prompt_filter,
     ]
 
